@@ -39,6 +39,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.time.Instant
@@ -61,6 +62,7 @@ class UsageService : Service(), KoinComponent {
             .setContentTitle("Traffic Light")
             .setOngoing(true)
             .setSilent(true)
+            .setOnlyAlertOnce(true)
             .setWhen(Long.MAX_VALUE) // Keep above other notifications
             .setShowWhen(false) // Hide timestamp
     }
@@ -221,14 +223,15 @@ class UsageService : Service(), KoinComponent {
     }
 
     var lastSnapshot: TrafficSnapshot = TrafficSnapshot(-1)
-    private fun updateNotification(trafficSnapshot: TrafficSnapshot) {
+    private suspend fun updateNotification(trafficSnapshot: TrafficSnapshot) {
         lastSnapshot = trafficSnapshot.copy()
 
         val title = getString(R.string.speed, formatter.format(trafficSnapshot.totalSpeed, 2, true))
         val spacing = 18
         val messageShort =
             getString(R.string.wi_fi, formatter.format(todayUsage.totalWifi, 2)).clipAndPad(spacing) +
-            getString(R.string.mobile, formatter.format(todayUsage.totalCellular, 2))
+            getString(R.string.mobile, formatter.format(todayUsage.totalCellular, 2)) +
+                    " cache: ${cachedIcons.size}"
 
         notification = notificationBuilder
             .setSmallIcon(createIcon(trafficSnapshot))
@@ -249,7 +252,7 @@ class UsageService : Service(), KoinComponent {
 
     private var cachedIcons: MutableMap<String, IconCompat> = mutableMapOf()
     var bitmap: Bitmap? = null
-    fun createIcon(snapshot: TrafficSnapshot): IconCompat {
+    suspend fun createIcon(snapshot: TrafficSnapshot): IconCompat {
         val density = Density(this@UsageService)
         val multiplier = 24 * density.density / 96f * if (bigIcon) 2f else 1f
         val height = (96 * multiplier).toInt()
@@ -267,28 +270,37 @@ class UsageService : Service(), KoinComponent {
             return cachedIcons.getValue(iconTag)
         }
 
-        if (bitmap == null || bitmap!!.height != height) {
-            bitmap = createBitmap(height, height, Bitmap.Config.ALPHA_8)
-        } else {
-            bitmap?.eraseColor(Color.TRANSPARENT)
+        return withContext(Dispatchers.Default) {
+            if (bitmap == null || bitmap!!.height != height) {
+                bitmap = createBitmap(height, height, Bitmap.Config.ALPHA_8)
+            } else {
+                bitmap?.eraseColor(Color.TRANSPARENT)
+            }
+
+            val canvas = NativeCanvas(bitmap!!)
+
+            paint.apply {
+                textSize = 72f * multiplier
+                letterSpacing = -0.05f * multiplier
+            }
+            canvas.drawText(speed, 48f * multiplier, 56f * multiplier, paint)
+
+            paint.apply {
+                textSize = 46f * multiplier
+                letterSpacing = 0f * multiplier
+            }
+            canvas.drawText(unit, 48f * multiplier, 96f * multiplier, paint)
+
+            // Don't cache numbers with many digits as they appear much more often and are unlikely
+            // to be worth the cost of creating a new bitmap
+            if (speed.count(Char::isDigit) < 3) {
+                cachedIcons[iconTag] =
+                    IconCompat.createWithBitmap(bitmap!!.copy(Bitmap.Config.ALPHA_8, false))
+                return@withContext cachedIcons[iconTag]!!
+            } else {
+                return@withContext IconCompat.createWithBitmap(bitmap!!)
+            }
         }
-
-        val canvas = NativeCanvas(bitmap!!)
-
-        paint.apply {
-            textSize = 72f * multiplier
-            letterSpacing = -0.05f * multiplier
-        }
-        canvas.drawText(speed, 48f * multiplier, 56f * multiplier, paint)
-
-        paint.apply {
-            textSize = 46f * multiplier
-            letterSpacing = 0f * multiplier
-        }
-        canvas.drawText(unit, 48f * multiplier, 96f * multiplier, paint)
-
-        cachedIcons[iconTag] = IconCompat.createWithBitmap(bitmap!!.copy(Bitmap.Config.ALPHA_8, false))
-        return cachedIcons[iconTag]!!
     }
 
     companion object {
