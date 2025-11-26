@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -16,6 +17,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.leekleak.trafficlight.BuildConfig
 import com.leekleak.trafficlight.R
+import com.leekleak.trafficlight.database.TrafficSnapshot
 import com.leekleak.trafficlight.util.categoryTitle
 import com.leekleak.trafficlight.util.categoryTitleSmall
 
@@ -63,11 +65,15 @@ fun Settings(
         }
         item {
             val forceFallback by viewModel.forceFallback.collectAsState()
+            val doesFallbackWork = remember { TrafficSnapshot.doesFallbackWork() }
             SwitchPreference(
                 title = stringResource(R.string.force_fallback),
-                summary = stringResource(R.string.force_fallback_description),
-                icon = painterResource(R.drawable.speed),
+                summary = if (doesFallbackWork) stringResource(R.string.force_fallback_description) else stringResource(
+                    R.string.fallback_unsupported
+                ),
+                icon = painterResource(R.drawable.fallback),
                 value = forceFallback,
+                enabled = doesFallbackWork,
                 onValueChanged = { viewModel.setForceFallback(it) }
             )
         }
@@ -78,7 +84,7 @@ fun Settings(
             Preference(
                 title = stringResource(R.string.clear_history),
                 summary = stringResource(R.string.clear_history_description),
-                icon = painterResource(R.drawable.fallback),
+                icon = painterResource(R.drawable.clear_history),
                 onClick = { viewModel.clearDB() },
                 controls = {
                     Text(pluralStringResource(R.plurals.days, dbSize / 24, dbSize / 24))

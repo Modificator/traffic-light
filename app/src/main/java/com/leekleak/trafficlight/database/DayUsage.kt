@@ -6,13 +6,10 @@ import com.leekleak.trafficlight.model.PreferenceRepo
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.io.File
-import java.io.FileOutputStream
 import java.time.LocalDate
-import kotlin.getValue
 
 data class DayUsage(
     val date: LocalDate = LocalDate.now(),
@@ -106,8 +103,8 @@ data class TrafficSnapshot (
             if (it) {
                 try {
                     fallbackUpdateSnapshot()
-                } catch (_: Exception) {
-                    Log.e("Traffic Light", "Tried using fallback and it failed")
+                } catch (e: Exception) {
+                    Log.e("Traffic Light", "Fallback unsupported: $e")
                     preferenceRepo.setForceFallback(false)
                     useFallback = false
                 }
@@ -132,13 +129,6 @@ data class TrafficSnapshot (
          */
     }
 
-    val mobileRxFile: File by lazy { File("/sys/class/net/rmnet0/statistics/rx_bytes") }
-    val mobileTxFile: File by lazy { File("/sys/class/net/rmnet0/statistics/tx_bytes") }
-    val wifiRxFile: File by lazy { File("/sys/class/net/wlan0/statistics/rx_bytes") }
-    val wifiTxFile: File by lazy { File("/sys/class/net/wlan0/statistics/tx_bytes") }
-    val ethRxFile: File by lazy { File("/sys/class/net/eth0/statistics/rx_bytes") }
-    val ethTxFile: File by lazy { File("/sys/class/net/eth0/statistics/tx_bytes") }
-
     private fun fallbackUpdateSnapshot() {
         val mobileUp = if (mobileTxFile.exists()) mobileTxFile.readText().trim().toLong() else 0
         val mobileDown = if (mobileRxFile.exists()) mobileRxFile.readText().trim().toLong() else 0
@@ -150,5 +140,16 @@ data class TrafficSnapshot (
         currentDown = mobileDown + wifiDown
         currentMobile = mobileUp + mobileDown
         currentWifi = wifiUp + wifiDown
+    }
+
+    companion object {
+        private val mobileRxFile: File by lazy { File("/sys/class/net/rmnet0/statistics/rx_bytes") }
+        private val mobileTxFile: File by lazy { File("/sys/class/net/rmnet0/statistics/tx_bytes") }
+        private val wifiRxFile: File by lazy { File("/sys/class/net/wlan0/statistics/rx_bytes") }
+        private val wifiTxFile: File by lazy { File("/sys/class/net/wlan0/statistics/tx_bytes") }
+        private val ethRxFile: File by lazy { File("/sys/class/net/eth0/statistics/rx_bytes") }
+        private val ethTxFile: File by lazy { File("/sys/class/net/eth0/statistics/tx_bytes") }
+
+        fun doesFallbackWork(): Boolean = mobileTxFile.canRead()
     }
 }

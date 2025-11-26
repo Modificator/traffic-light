@@ -37,4 +37,5 @@
     <string name="version">Versija %1$s</string>
     <string name="force_fallback">Priverstinai naudoti atsarginį skaičiavimo metodą</string>
     <string name="force_fallback_description">Naudinga jei jūsų sitema turi klaidų arba esate prisijungę prie laidinio interneto</string>
+    <string name="fallback_unsupported">Atsarginis skaičiavimo metodas neveikia</string>
 </resources>
