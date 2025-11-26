@@ -226,11 +226,8 @@ class UsageService : Service(), KoinComponent {
         }
     }
 
-    var lastSnapshot: TrafficSnapshot = TrafficSnapshot(-1)
     var lastTitle: String = ""
     private suspend fun updateNotification(trafficSnapshot: TrafficSnapshot) {
-        lastSnapshot = trafficSnapshot.copy()
-
         val title = getString(R.string.speed, formatter.format(trafficSnapshot.totalSpeed, 2, true))
 
         if (lastTitle == title) return // If the title is the same, so is the icon.

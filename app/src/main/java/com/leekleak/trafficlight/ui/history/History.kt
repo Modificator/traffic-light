@@ -196,7 +196,7 @@ fun HistoryItem(
             enter = expandVertically(spring(0.7f, Spring.StiffnessMedium)),
             exit = shrinkVertically(spring(0.7f, Spring.StiffnessMedium))
         ) {
-            Box(modifier = Modifier.padding(2.dp)) {
+            Box(modifier = Modifier.padding(top = 2.dp, bottom = 6.dp, start = 2.dp, end = 2.dp)) {
                 Box(
                     modifier = Modifier
                         .clip(MaterialTheme.shapes.medium)
@@ -210,10 +210,6 @@ fun HistoryItem(
                     )
                 }
             }
-        }
-        if (date.dayOfMonth == 1) {
-
-            date.month.getDisplayName(TextStyle.FULL_STANDALONE, Locale.getDefault())
         }
     }
 }
