@@ -44,11 +44,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import java.time.Instant
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.temporal.ChronoUnit
 
 class UsageService : Service(), KoinComponent {
     private val serviceScope = CoroutineScope(Dispatchers.IO)
@@ -192,10 +188,11 @@ class UsageService : Service(), KoinComponent {
                     trafficSnapshot.updateSnapshot()
                 }
 
-                if (updateCounter == 10) {
+                if (updateCounter == 5) {
                     updateDatabase()
                     updateCounter = 0
                 } else {
+                    interpolateDatabase(trafficSnapshot)
                     updateCounter++
                 }
 
@@ -208,22 +205,26 @@ class UsageService : Service(), KoinComponent {
     }
 
     private fun updateDatabase() {
-        val dateTime = LocalDateTime.now()
-
         if (todayUsage.date != LocalDate.now()) {
             todayUsage = hourlyUsageRepo.calculateDayUsage(LocalDate.now())
         } else {
-            val timezone = ZoneId.systemDefault().rules.getOffset(Instant.now())
-
-            val stamp = dateTime.truncatedTo(ChronoUnit.HOURS).toInstant(timezone).toEpochMilli()
-            val stampNow = dateTime.toInstant(timezone).toEpochMilli()
+            val stamp = System.currentTimeMillis() / 3_600_000 * 3_600_000
+            val stampNow = System.currentTimeMillis()
 
             todayUsage = todayUsage.copy(
-                hours = todayUsage.hours.toMutableMap().apply {
+                hours = todayUsage.hours.apply {
                     this[stamp] = hourlyUsageRepo.calculateHourData(stamp, stampNow)
                 }
             ).also { it.categorizeUsage() }
         }
+    }
+
+    private fun interpolateDatabase(trafficSnapshot: TrafficSnapshot) {
+        val stamp = System.currentTimeMillis() / 3_600_000 * 3_600_000
+        todayUsage.hours[stamp]?.add(trafficSnapshot.speedToHourData()) ?: run {
+            todayUsage.hours[stamp] = trafficSnapshot.speedToHourData()
+        }
+        todayUsage.categorizeUsage()
     }
 
     var lastTitle: String = ""

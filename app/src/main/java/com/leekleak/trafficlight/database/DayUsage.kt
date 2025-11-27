@@ -39,13 +39,11 @@ data class HourData(
         )
     }
 
-    operator fun plus(other: HourData): HourData {
-        return HourData(
-            upload + other.upload,
-            download + other.download,
-            wifi + other.wifi,
-            cellular + other.cellular
-        )
+    fun add(other: HourData) {
+        upload += other.upload
+        download += other.download
+        wifi += other.wifi
+        cellular += other.cellular
     }
 }
 
@@ -72,7 +70,13 @@ data class TrafficSnapshot (
         }
     }
     val totalSpeed: Long
-        get() = currentUp + currentDown - lastUp - lastDown
+        get() = upSpeed + downSpeed
+
+    val upSpeed: Long
+        get() = currentUp - lastUp
+
+    val downSpeed: Long
+        get() = currentDown - lastDown
 
     val mobileSpeed: Long
         get() = currentMobile - lastMobile
@@ -136,6 +140,8 @@ data class TrafficSnapshot (
         currentMobile = mobileUp + mobileDown
         currentWifi = wifiUp + wifiDown
     }
+
+    fun speedToHourData(): HourData = HourData(upSpeed, downSpeed, wifiSpeed, mobileSpeed)
 
     companion object {
         private val mobileRxFile: File by lazy { File("/sys/class/net/rmnet0/statistics/rx_bytes") }

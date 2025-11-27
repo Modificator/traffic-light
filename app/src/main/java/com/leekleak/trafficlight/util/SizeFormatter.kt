@@ -8,10 +8,6 @@ import kotlin.math.pow
 enum class DataSizeUnit {
     B, KB, MB, GB, TB, // Actual sizes
     PB, EB, ZB, YB;  // Mental disorders
-
-    fun getSize(precision: Int = 0): Long {
-        return (1024.0.pow(max(entries.indexOf(this) - precision/3.0, 0.0))).toLong()
-    }
 }
 
 data class DataSize (
