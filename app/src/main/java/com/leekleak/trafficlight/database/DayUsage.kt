@@ -61,6 +61,7 @@ data class TrafficSnapshot (
     var currentWifi: Long = 0,
 ) : KoinComponent {
     private val preferenceRepo: PreferenceRepo by inject()
+    private var useFallback: Boolean = TrafficStats.getTotalTxBytes() == TrafficStats.UNSUPPORTED.toLong()
 
     init {
         CoroutineScope(Dispatchers.IO).launch {
@@ -79,8 +80,6 @@ data class TrafficSnapshot (
     val wifiSpeed: Long
         get() = currentWifi - lastWifi
 
-    private var useFallback: Boolean? = null
-
     fun setCurrentAsLast() {
         lastDown = currentDown
         lastUp = currentUp
@@ -96,10 +95,7 @@ data class TrafficSnapshot (
     }
 
     fun updateSnapshot() {
-        if (useFallback == null) {
-            useFallback = TrafficStats.getTotalTxBytes() == TrafficStats.UNSUPPORTED.toLong()
-        }
-        useFallback?.let {
+        useFallback.let {
             if (it) {
                 try {
                     fallbackUpdateSnapshot()
@@ -108,8 +104,7 @@ data class TrafficSnapshot (
                     preferenceRepo.setForceFallback(false)
                     useFallback = false
                 }
-            }
-            else {
+            } else {
                 regularUpdateSnapshot()
             }
         }
