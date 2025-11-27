@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,18 +16,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.painter.Painter
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.leekleak.trafficlight.R
+import com.leekleak.trafficlight.ui.theme.card
 import com.leekleak.trafficlight.util.WideScreenWrapper
 import com.leekleak.trafficlight.util.categoryTitle
 
@@ -65,6 +69,7 @@ fun Permissions(
                     PermissionCard(
                         title = stringResource(R.string.notification_permission),
                         description = stringResource(R.string.notification_permission_description),
+                        icon = painterResource(R.drawable.notification),
                         enabled = !notifPermission,
                         onClick = { activity?.let { viewModel.allowNotifications(it) } }
                     )
@@ -73,6 +78,7 @@ fun Permissions(
                     PermissionCard(
                         title = stringResource(R.string.battery_optimization),
                         description = stringResource(R.string.battery_optimization_description),
+                        icon = painterResource(R.drawable.battery),
                         enabled = !backgroundPermission,
                         onClick = { activity?.let { viewModel.allowBackground(it) } }
                     )
@@ -81,6 +87,7 @@ fun Permissions(
                     PermissionCard(
                         title = stringResource(R.string.usage_statistics),
                         description = stringResource(R.string.usage_statistics_description),
+                        icon = painterResource(R.drawable.usage),
                         enabled = !usagePermission,
                         onClick = { activity?.let { viewModel.allowUsage(it) } }
                     )
@@ -94,16 +101,22 @@ fun Permissions(
 fun PermissionCard(
     title: String,
     description: String,
+    icon: Painter,
     enabled: Boolean,
     onClick: () -> Unit
 ) {
     Column (modifier = Modifier
-        .clip(MaterialTheme.shapes.large)
-        .background(MaterialTheme.colorScheme.surfaceContainer)
+        .card()
         .padding(16.dp),
         horizontalAlignment = Alignment.End
     ) {
-        Text(modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold, text = title)
+        Row (
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Icon(icon, "Icon")
+            Text(modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.Bold, text = title)
+        }
         Text(modifier = Modifier.fillMaxWidth(), text = description)
         Button(enabled = enabled, onClick = onClick) { Text(stringResource(R.string.grant)) }
     }

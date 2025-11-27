@@ -32,7 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -49,6 +48,7 @@ import com.leekleak.trafficlight.charts.BarGraph
 import com.leekleak.trafficlight.charts.LineGraph
 import com.leekleak.trafficlight.charts.model.BarData
 import com.leekleak.trafficlight.database.HourUsage
+import com.leekleak.trafficlight.ui.theme.card
 import com.leekleak.trafficlight.util.SizeFormatter
 import com.leekleak.trafficlight.util.categoryTitle
 import com.leekleak.trafficlight.util.categoryTitleSmall
@@ -120,12 +120,7 @@ fun HistoryItem(
     val usage by viewModel.dayUsage(dayStamp, dayStamp + 3_600_000L * 23).collectAsState(listOf())
     val totalWifi = usage.sumOf { it.totalWifi }
     val totalCellular = usage.sumOf { it.totalCellular }
-    Column (
-        modifier = Modifier
-            .shadow(4.dp, MaterialTheme.shapes.large)
-            .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-    ) {
+    Column (Modifier.card()) {
         Box (
             modifier = Modifier
                 .clip(MaterialTheme.shapes.large)

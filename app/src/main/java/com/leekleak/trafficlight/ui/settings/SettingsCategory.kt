@@ -1,6 +1,5 @@
 package com.leekleak.trafficlight.ui.settings
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -21,12 +20,11 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
+import com.leekleak.trafficlight.ui.theme.card
 
 @Composable
 fun Preference(
@@ -42,10 +40,8 @@ fun Preference(
         modifier = Modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp)
-            .shadow(4.dp, MaterialTheme.shapes.large)
-            .clip(MaterialTheme.shapes.extraSmall)
+            .card()
             .clickable(enabled = enabled, onClick = onClick)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
             .padding(
                 start = if (icon != null) 8.dp else 16.dp,
                 end = 16.dp,

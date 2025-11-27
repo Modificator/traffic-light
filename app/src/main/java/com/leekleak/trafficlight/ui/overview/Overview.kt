@@ -28,7 +28,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -47,6 +46,7 @@ import com.leekleak.trafficlight.charts.BarGraph
 import com.leekleak.trafficlight.charts.model.BarData
 import com.leekleak.trafficlight.database.DayUsage
 import com.leekleak.trafficlight.ui.history.dayUsageToBarData
+import com.leekleak.trafficlight.ui.theme.card
 import com.leekleak.trafficlight.util.DataSize
 import com.leekleak.trafficlight.util.categoryTitle
 import com.leekleak.trafficlight.util.toTimestamp
@@ -115,9 +115,7 @@ fun LazyListScope.overviewTab(
             }
             Box(
                 modifier = Modifier
-                    .shadow(4.dp, MaterialTheme.shapes.large)
-                    .clip(MaterialTheme.shapes.large)
-                    .background(MaterialTheme.colorScheme.surfaceContainer)
+                    .card()
                     .padding(6.dp)
             ) {
                 Box(
@@ -150,9 +148,7 @@ fun RowScope.SummaryItem(
     Row (
         modifier = Modifier
             .weight(1f + animation.value / 256f)
-            .shadow(4.dp, MaterialTheme.shapes.large)
-            .clip(MaterialTheme.shapes.large)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
+            .card()
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
