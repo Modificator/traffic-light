@@ -32,6 +32,8 @@
     <string name="force_fallback">Force fallback speed tracking</string>
     <string name="force_fallback_description">Helpful when using a buggy ROM or ethernet</string>
     <string name="fallback_unsupported">Fallback unsupported</string>
+    <string name="ui">Interface</string>
+    <string name="improve_contrast">Improve contrast</string>
     <plurals name="days">
         <item quantity="one">%d day</item>
         <item quantity="other">%d days</item>

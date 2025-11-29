@@ -7,11 +7,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 
 @Composable
 fun Theme(
@@ -33,7 +36,22 @@ fun Theme(
 
 @Composable
 fun Modifier.card(): Modifier {
-    return this.shadow(4.dp, MaterialTheme.shapes.large)
+    val viewModel: ThemeVM = viewModel()
+    val improveContrast by viewModel.preferenceRepo.improveContrast.collectAsState(true)
+    return this.run {
+            if (improveContrast) this.shadow(2.dp, MaterialTheme.shapes.large)
+            else this
+        }
         .clip(MaterialTheme.shapes.large)
         .background(MaterialTheme.colorScheme.surfaceContainer)
+}
+
+@Composable
+fun Modifier.navBarShadow(): Modifier {
+    val viewModel: ThemeVM = viewModel()
+    val improveContrast by viewModel.preferenceRepo.improveContrast.collectAsState(true)
+    return this.run {
+        if (improveContrast) this.shadow(4.dp, MaterialTheme.shapes.extraLarge)
+        else this
+    }
 }

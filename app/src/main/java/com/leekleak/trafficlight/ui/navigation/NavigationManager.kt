@@ -20,7 +20,6 @@ import androidx.compose.material3.HorizontalFloatingToolbar
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -33,7 +32,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
@@ -46,6 +44,7 @@ import com.leekleak.trafficlight.R
 import com.leekleak.trafficlight.ui.history.History
 import com.leekleak.trafficlight.ui.overview.Overview
 import com.leekleak.trafficlight.ui.settings.Settings
+import com.leekleak.trafficlight.ui.theme.navBarShadow
 import com.leekleak.trafficlight.util.WideScreenWrapper
 
 import kotlinx.coroutines.launch
@@ -111,7 +110,7 @@ fun NavigationManager() {
                 contentAlignment = Alignment.Center
             ) {
                 HorizontalFloatingToolbar(
-                    modifier = Modifier.shadow(8.dp, MaterialTheme.shapes.extraExtraLarge),
+                    modifier = Modifier.navBarShadow(),
                     expanded = true,
                     colors = vibrantColors,
                     content = {

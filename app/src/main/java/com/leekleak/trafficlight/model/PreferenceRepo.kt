@@ -32,10 +32,14 @@ class PreferenceRepo (
 
     val forceFallback: Flow<Boolean> = context.dataStore.data.map { it[FORCE_FALLBACK] ?: false }
     fun setForceFallback(value: Boolean) = scope.launch { context.dataStore.edit { it[FORCE_FALLBACK] = value } }
+
+    val improveContrast: Flow<Boolean> = context.dataStore.data.map { it[IMPROVE_CONTRAST] ?: true }
+    fun setImproveContrast(value: Boolean) = scope.launch { context.dataStore.edit { it[IMPROVE_CONTRAST] = value } }
     private companion object {
         val MODE_AOD = booleanPreferencesKey("mode_aod")
         val BIG_ICON = booleanPreferencesKey("big_icon")
         val SPEED_BITS = booleanPreferencesKey("speed_bits")
         val FORCE_FALLBACK = booleanPreferencesKey("force_fallback")
+        val IMPROVE_CONTRAST = booleanPreferencesKey("improve_contrast")
     }
 }

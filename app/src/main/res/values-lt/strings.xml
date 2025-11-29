@@ -38,4 +38,6 @@
     <string name="force_fallback">Priverstinai naudoti atsarginį skaičiavimo metodą</string>
     <string name="force_fallback_description">Naudinga jei jūsų sitema turi klaidų arba esate prisijungę prie laidinio interneto</string>
     <string name="fallback_unsupported">Atsarginis skaičiavimo metodas neveikia</string>
+    <string name="ui">Išvaizda</string>
+    <string name="improve_contrast">Padidinti kontrastą</string>
 </resources>
