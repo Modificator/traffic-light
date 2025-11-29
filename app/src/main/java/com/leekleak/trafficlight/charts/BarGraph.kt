@@ -7,15 +7,21 @@ import androidx.compose.animation.core.EaseIn
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableIntState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
@@ -24,29 +30,31 @@ import com.leekleak.trafficlight.charts.model.BarData
 import com.leekleak.trafficlight.util.px
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import kotlin.Boolean
 
 
 @Composable
 fun BarGraph(
-    modifier: Modifier = Modifier,
     data: List<BarData>,
     finalGridPoint: String = "24",
     centerLabels: Boolean = false
 ) {
-    BarGraphImpl(
-        modifier = modifier,
-        xAxisData = data.map { it.x },
-        yAxisData = data.map { Pair(it.y1, it.y2) },
-        finalGridPoint = finalGridPoint,
-        centerLabels = centerLabels
-    )
+    Box(
+        modifier = Modifier
+            .clip(MaterialTheme.shapes.medium)
+            .background(MaterialTheme.colorScheme.background)
+    ) {
+        BarGraphImpl(
+            xAxisData = data.map { it.x },
+            yAxisData = data.map { Pair(it.y1, it.y2) },
+            finalGridPoint = finalGridPoint,
+            centerLabels = centerLabels
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 private fun BarGraphImpl(
-    modifier: Modifier,
     xAxisData: List<String>,
     yAxisData: List<Pair<Double, Double>>,
     finalGridPoint: String,
@@ -129,7 +137,9 @@ private fun BarGraphImpl(
     }
 
     Canvas(
-        modifier = modifier
+        modifier = Modifier
+            .padding(top = 24.dp, bottom = 14.dp, start = 20.dp, end = 20.dp)
+            .height(170.dp)
             .fillMaxWidth()
             .pointerInput(true) {
                 detectTapGestures { offset ->

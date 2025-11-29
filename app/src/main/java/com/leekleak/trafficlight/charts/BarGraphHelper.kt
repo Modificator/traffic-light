@@ -55,7 +55,7 @@ internal class BarGraphHelper(
     internal val metrics = scope.buildMetrics()
 
     private fun DrawScope.buildMetrics(): BarGraphMetrics {
-        val yAxisPadding: Dp = 52.dp
+        val yAxisPadding: Dp = 36.dp
         val paddingBottom: Dp = 20.dp
 
         val gridHeight = size.height - paddingBottom.toPx()

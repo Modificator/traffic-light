@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -192,18 +191,7 @@ fun HistoryItem(
             exit = shrinkVertically(spring(0.7f, Spring.StiffnessMedium))
         ) {
             Box(modifier = Modifier.padding(4.dp)) {
-                Box(
-                    modifier = Modifier
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(MaterialTheme.colorScheme.background)
-                ) {
-                    BarGraph(
-                        modifier = Modifier
-                            .padding(top = 24.dp, start = 24.dp, bottom = 16.dp)
-                            .height(150.dp),
-                        data = dayUsageToBarData(usage),
-                    )
-                }
+                BarGraph(dayUsageToBarData(usage))
             }
         }
     }

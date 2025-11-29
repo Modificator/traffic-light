@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -27,7 +26,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -118,20 +116,11 @@ fun LazyListScope.overviewTab(
                     .card()
                     .padding(6.dp)
             ) {
-                Box(
-                    modifier = Modifier
-                        .clip(MaterialTheme.shapes.medium)
-                        .background(MaterialTheme.colorScheme.background)
-                ) {
-                    BarGraph(
-                        modifier = Modifier
-                            .padding(top = 24.dp, start = 24.dp, bottom = 16.dp)
-                            .height(150.dp),
-                        data = data,
-                        finalGridPoint = finalGridPoint,
-                        centerLabels = centerLabels
-                    )
-                }
+                BarGraph(
+                    data = data,
+                    finalGridPoint = finalGridPoint,
+                    centerLabels = centerLabels
+                )
             }
         }
     }
