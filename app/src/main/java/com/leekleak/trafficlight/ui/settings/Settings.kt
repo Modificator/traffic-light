@@ -2,7 +2,10 @@ package com.leekleak.trafficlight.ui.settings
 
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -14,10 +17,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.leekleak.trafficlight.BuildConfig
 import com.leekleak.trafficlight.R
 import com.leekleak.trafficlight.database.TrafficSnapshot
+import com.leekleak.trafficlight.ui.theme.card
 import com.leekleak.trafficlight.util.categoryTitle
 import com.leekleak.trafficlight.util.categoryTitleSmall
 
@@ -27,10 +33,35 @@ fun Settings(
 ) {
     val viewModel: SettingsVM = viewModel()
     val activity = LocalActivity.current
+
+    val limitedMode by viewModel.hourlyUsageRepo.limitedMode().collectAsState(false)
     LazyColumn(
         Modifier.background(MaterialTheme.colorScheme.surface),
         contentPadding = paddingValues
     ) {
+        item {
+            if (limitedMode) {
+                Column (
+                    modifier = Modifier
+                        .padding(vertical = 8.dp)
+                        .card()
+                        .padding(16.dp)
+                ) {
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = stringResource(R.string.limited_mode),
+                        fontWeight = FontWeight(800),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                    Text(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = stringResource(R.string.limited_mode_description),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
+        }
+
         categoryTitle(R.string.settings)
         categoryTitleSmall(R.string.notifications)
         item {
@@ -85,9 +116,10 @@ fun Settings(
                 title = stringResource(R.string.clear_history),
                 summary = stringResource(R.string.clear_history_description),
                 icon = painterResource(R.drawable.clear_history),
+                enabled = !limitedMode,
                 onClick = { viewModel.clearDB() },
                 controls = {
-                    Text(pluralStringResource(R.plurals.days, dbSize / 24, dbSize / 24))
+                    Text(stringResource(R.string.days, dbSize / 24))
                 }
             )
         }

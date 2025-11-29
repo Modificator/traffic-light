@@ -3,8 +3,10 @@ package com.leekleak.trafficlight.database
 import android.app.usage.NetworkStatsManager
 import android.content.Context
 import android.content.Context.NETWORK_STATS_SERVICE
+import com.leekleak.trafficlight.services.UsageService
 import com.leekleak.trafficlight.util.NetworkType
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -19,6 +21,13 @@ class HourlyUsageRepo(context: Context) : KoinComponent {
     private var networkStatsManager: NetworkStatsManager = context.getSystemService(NETWORK_STATS_SERVICE) as NetworkStatsManager
 
     fun getDBSize(): Flow<Int> = dao.getDBSize()
+
+    fun limitedMode(): Flow<Boolean> = combine(
+        getDBSize(),
+        UsageService.todayUsageFlow
+    ) { size, today ->
+        size == 0 && today.totalCellular + today.totalWifi == 0L
+    }
 
     fun getUsage(startStamp: Long, endStamp: Long): Flow<List<HourUsage>> =
         dao.getUsageFlow(startStamp, endStamp)
@@ -93,8 +102,8 @@ class HourlyUsageRepo(context: Context) : KoinComponent {
     }
 
     fun calculateHourData(startTime: Long, endTime: Long): HourData {
-        val statsWifi = networkStatsManager?.querySummaryForDevice(NetworkType.Wifi.ordinal, null, startTime, endTime)
-        val statsMobile = networkStatsManager?.querySummaryForDevice(NetworkType.Cellular.ordinal, null, startTime, endTime)
+        val statsWifi = networkStatsManager.querySummaryForDevice(NetworkType.Wifi.ordinal, null, startTime, endTime)
+        val statsMobile = networkStatsManager.querySummaryForDevice(NetworkType.Cellular.ordinal, null, startTime, endTime)
 
         val hourData = HourData()
         statsMobile?.let {

@@ -32,8 +32,4 @@
     <string name="force_fallback">Forzar método alternativo de seguimiento</string>
     <string name="force_fallback_description">Útil cuando se usa una ROM con errores o conexión por ethernet</string>
     <string name="fallback_unsupported">Método alternativo no disponible</string>
-    <plurals name="days">
-        <item quantity="one">%d día</item>
-        <item quantity="other">%d dias</item>
-    </plurals>
 </resources>

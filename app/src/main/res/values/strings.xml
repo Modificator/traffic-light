@@ -34,8 +34,7 @@
     <string name="fallback_unsupported">Fallback unsupported</string>
     <string name="ui">Interface</string>
     <string name="improve_contrast">Improve contrast</string>
-    <plurals name="days">
-        <item quantity="one">%d day</item>
-        <item quantity="other">%d days</item>
-    </plurals>
+    <string name="limited_mode">Limited Mode</string>
+    <string name="limited_mode_description">Unfortunately your operating system does not support long term data tracking.</string>
+    <string name="days">Days: %1$d</string>
 </resources>

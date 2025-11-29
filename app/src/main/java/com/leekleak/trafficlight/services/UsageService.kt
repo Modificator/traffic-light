@@ -37,8 +37,6 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
@@ -84,7 +82,7 @@ class UsageService : Service(), KoinComponent {
 
     private var bigIcon = false
     private var aodMode = false
-
+    private var limitedMode = true // For cases where the NetworkStatsManager is broken
     private val formatter by lazy { SizeFormatter() }
 
     override fun onBind(intent: Intent): IBinder? {
@@ -99,15 +97,16 @@ class UsageService : Service(), KoinComponent {
             addAction(Intent.ACTION_SCREEN_OFF)
         })
         serviceScope.launch {
-            combine(
-                preferenceRepo.modeAOD,
-                preferenceRepo.bigIcon,
-                preferenceRepo.speedBits,
-            ) { aod, icon, bits ->
-                aodMode = aod
-                bigIcon = icon
-                formatter.asBits = bits
-            }.collect()
+            preferenceRepo.modeAOD.collect { aodMode = it }
+        }
+        serviceScope.launch {
+            preferenceRepo.bigIcon.collect { bigIcon = it }
+        }
+        serviceScope.launch {
+            preferenceRepo.speedBits.collect { formatter.asBits = it }
+        }
+        serviceScope.launch {
+            hourlyUsageRepo.getDBSize().collect { limitedMode = it == 0 }
         }
     }
 
@@ -188,12 +187,14 @@ class UsageService : Service(), KoinComponent {
                     trafficSnapshot.updateSnapshot()
                 }
 
-                if (updateCounter == 5) {
-                    updateDatabase()
-                    updateCounter = 0
-                } else {
-                    interpolateDatabase(trafficSnapshot)
-                    updateCounter++
+                if (!limitedMode) {
+                    if (updateCounter == 5) {
+                        updateDatabase()
+                        updateCounter = 0
+                    } else {
+                        interpolateDatabase(trafficSnapshot)
+                        updateCounter++
+                    }
                 }
 
                 updateNotification(trafficSnapshot)
@@ -242,7 +243,7 @@ class UsageService : Service(), KoinComponent {
         notification = notificationBuilder
             .setSmallIcon(createIcon(trafficSnapshot))
             .setContentTitle(title)
-            .setContentText(messageShort)
+            .run { if (!limitedMode) this.setContentText(messageShort) else this }
             .build()
         notification?.flags = Notification.FLAG_ONGOING_EVENT or Notification.FLAG_NO_CLEAR
         notificationManager.notify(NOTIFICATION_ID, notification)

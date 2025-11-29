@@ -22,6 +22,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +38,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation3.runtime.NavKey
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberNavBackStack
@@ -46,7 +49,6 @@ import com.leekleak.trafficlight.ui.overview.Overview
 import com.leekleak.trafficlight.ui.settings.Settings
 import com.leekleak.trafficlight.ui.theme.navBarShadow
 import com.leekleak.trafficlight.util.WideScreenWrapper
-
 import kotlinx.coroutines.launch
 import kotlinx.serialization.Serializable
 
@@ -74,7 +76,14 @@ sealed interface NavKeys : NavKey {
 @OptIn(ExperimentalMaterial3ExpressiveApi::class)
 @Composable
 fun NavigationManager() {
+    val viewModel: NavigationManagerVM = viewModel()
     var currentTab by rememberSaveable(stateSaver = NavKeys.stateSaver) { mutableStateOf(NavKeys.Overview) }
+    val limitedMode: Boolean by viewModel.hourlyUsageRepo.limitedMode().collectAsState(false)
+
+    LaunchedEffect(limitedMode) {
+        currentTab = if (limitedMode) NavKeys.Settings else NavKeys.Overview
+    }
+
     val overviewBackStack = rememberNavBackStack(NavKeys.Overview)
     val historyBackStack = rememberNavBackStack(NavKeys.History)
     val settingsBackStack = rememberNavBackStack(NavKeys.Settings)
@@ -103,30 +112,31 @@ fun NavigationManager() {
     Scaffold(
         contentWindowInsets = WindowInsets(0, 0, 0, 0),
         bottomBar = {
-            Box(
-                modifier = Modifier.fillMaxWidth()
-                    .navigationBarsPadding()
-                    .padding(8.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                HorizontalFloatingToolbar(
-                    modifier = Modifier.navBarShadow(),
-                    expanded = true,
-                    colors = vibrantColors,
-                    content = {
-                        NavigationButton(
-                            currentTab, NavKeys.Overview, R.drawable.overview
-                        ) { currentTab = NavKeys.Overview }
-                        NavigationButton(
-                            currentTab, NavKeys.History, R.drawable.history
-                        ) { currentTab = NavKeys.History }
-                        NavigationButton(
-                            currentTab, NavKeys.Settings, R.drawable.settings
-                        ) { currentTab = NavKeys.Settings }
-                    },
-                )
+            if (!limitedMode) {
+                Box(
+                    modifier = Modifier.fillMaxWidth()
+                        .navigationBarsPadding()
+                        .padding(8.dp),
+                    contentAlignment = Alignment.Center
+                ) {
+                    HorizontalFloatingToolbar(
+                        modifier = Modifier.navBarShadow(),
+                        expanded = true,
+                        colors = vibrantColors,
+                        content = {
+                            NavigationButton(
+                                currentTab, NavKeys.Overview, R.drawable.overview
+                            ) { currentTab = NavKeys.Overview }
+                            NavigationButton(
+                                currentTab, NavKeys.History, R.drawable.history
+                            ) { currentTab = NavKeys.History }
+                            NavigationButton(
+                                currentTab, NavKeys.Settings, R.drawable.settings
+                            ) { currentTab = NavKeys.Settings }
+                        },
+                    )
+                }
             }
-
         }
     ) {
         WideScreenWrapper {
