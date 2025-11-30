@@ -37,4 +37,5 @@
     <string name="limited_mode">Limited Mode</string>
     <string name="limited_mode_description">Unfortunately your operating system does not support long term data tracking.</string>
     <string name="days">Days: %1$d</string>
+    <string name="dynamic_color">Dynamic Color</string>
 </resources>

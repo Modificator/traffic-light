@@ -1,5 +1,6 @@
 package com.leekleak.trafficlight.ui.settings
 
+import android.os.Build
 import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -125,7 +126,17 @@ fun Settings(
 
         categoryTitleSmall(R.string.ui)
         item {
-            val improveContrast by viewModel.preferenceRepo.improveContrast.collectAsState(true)
+            val dynamicColor by viewModel.preferenceRepo.dynamicColor.collectAsState(false)
+            SwitchPreference (
+                title = stringResource(R.string.dynamic_color),
+                icon = painterResource(R.drawable.theme),
+                value = dynamicColor && Build.VERSION.SDK_INT >= 31,
+                enabled = Build.VERSION.SDK_INT >= 31,
+                onValueChanged = { viewModel.preferenceRepo.setDynamicColor(it) },
+            )
+        }
+        item {
+            val improveContrast by viewModel.preferenceRepo.improveContrast.collectAsState(false)
             SwitchPreference (
                 title = stringResource(R.string.improve_contrast),
                 icon = painterResource(R.drawable.contrast),

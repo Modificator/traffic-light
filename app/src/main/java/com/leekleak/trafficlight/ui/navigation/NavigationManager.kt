@@ -93,7 +93,7 @@ fun NavigationManager() {
         NavKeys.Settings -> settingsBackStack
     }
 
-    val vibrantColors = FloatingToolbarDefaults.vibrantFloatingToolbarColors()
+    val vibrantColors = FloatingToolbarDefaults.standardFloatingToolbarColors()
     val toolbarOffset =
         FloatingToolbarDefaults.ContainerSize +
         FloatingToolbarDefaults.ContentPadding.calculateBottomPadding() * 2
