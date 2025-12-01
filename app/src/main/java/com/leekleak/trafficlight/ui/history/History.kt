@@ -51,12 +51,11 @@ import com.leekleak.trafficlight.ui.theme.card
 import com.leekleak.trafficlight.util.SizeFormatter
 import com.leekleak.trafficlight.util.categoryTitle
 import com.leekleak.trafficlight.util.categoryTitleSmall
+import com.leekleak.trafficlight.util.currentTimezone
 import com.leekleak.trafficlight.util.getName
 import com.leekleak.trafficlight.util.padHour
 import java.time.Duration
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 import java.time.format.TextStyle
 import java.time.temporal.ChronoUnit
 
@@ -113,9 +112,8 @@ fun HistoryItem(
     selected: Int,
     onClick: (i: Int) -> Unit
 ) {
-    val timezone = ZoneId.systemDefault().rules.getOffset(Instant.now())
     val date = LocalDate.now().minusDays(i.toLong())
-    val dayStamp = date.atStartOfDay().truncatedTo(ChronoUnit.DAYS).toInstant(timezone).toEpochMilli()
+    val dayStamp = date.atStartOfDay().truncatedTo(ChronoUnit.DAYS).toInstant(currentTimezone()).toEpochMilli()
     val usage by viewModel.dayUsage(dayStamp, dayStamp + 3_600_000L * 23).collectAsState(listOf())
     val totalWifi = usage.sumOf { it.totalWifi }
     val totalCellular = usage.sumOf { it.totalCellular }

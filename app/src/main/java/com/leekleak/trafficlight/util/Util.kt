@@ -21,6 +21,7 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.Month
 import java.time.ZoneId
+import java.time.ZoneOffset
 import java.time.format.TextStyle
 import java.util.Locale
 
@@ -46,7 +47,7 @@ fun padHour(time: Int): String {
 }
 
 fun LocalDate.toTimestamp(): Long =
-    atStartOfDay().toInstant(ZoneId.systemDefault().rules.getOffset(Instant.now())).toEpochMilli()
+    atStartOfDay().toInstant(currentTimezone()).toEpochMilli()
 
 fun DayOfWeek.getName(style: TextStyle) =
     this.getDisplayName(style, Locale.getDefault()).replaceFirstChar(Char::titlecase)
@@ -89,3 +90,5 @@ fun WideScreenWrapper(content: @Composable () -> Unit) {
         }
     }
 }
+
+fun currentTimezone(): ZoneOffset = ZoneId.systemDefault().rules.getOffset(Instant.now())

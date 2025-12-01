@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Context.NETWORK_STATS_SERVICE
 import com.leekleak.trafficlight.services.UsageService
 import com.leekleak.trafficlight.util.NetworkType
+import com.leekleak.trafficlight.util.currentTimezone
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -13,7 +14,6 @@ import org.koin.core.component.inject
 import timber.log.Timber
 import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 import java.time.temporal.ChronoUnit
 
 class HourlyUsageRepo(context: Context) : KoinComponent {
@@ -35,7 +35,7 @@ class HourlyUsageRepo(context: Context) : KoinComponent {
     fun getLastDayWithData(): Flow<LocalDate> = dao.getLastUsage().map { hourUsage ->
         hourUsage?.let {
             Instant.ofEpochMilli(it.timestamp)
-                .atZone(ZoneId.systemDefault().rules.getOffset(Instant.now()))
+                .atZone(currentTimezone())
                 .toLocalDate()
         } ?: LocalDate.now()
     }
@@ -52,9 +52,8 @@ class HourlyUsageRepo(context: Context) : KoinComponent {
         populating = true
 
         val suspiciousHours = mutableListOf<HourUsage>()
-        val timezone = ZoneId.systemDefault().rules.getOffset(Instant.now())
         val date = LocalDate.now().atStartOfDay()
-        val dayStamp = date.truncatedTo(ChronoUnit.DAYS).toInstant(timezone).toEpochMilli()
+        val dayStamp = date.truncatedTo(ChronoUnit.DAYS).toInstant(currentTimezone()).toEpochMilli()
 
         for (i in 1..10000) {
             if (suspiciousHours.size == 31 * 24) {
@@ -89,8 +88,7 @@ class HourlyUsageRepo(context: Context) : KoinComponent {
     }
 
     fun calculateDayUsage(date: LocalDate): DayUsage {
-        val timezone = ZoneId.systemDefault().rules.getOffset(Instant.now())
-        val dayStamp = date.atStartOfDay().truncatedTo(ChronoUnit.DAYS).toInstant(timezone).toEpochMilli()
+        val dayStamp = date.atStartOfDay().truncatedTo(ChronoUnit.DAYS).toInstant(currentTimezone()).toEpochMilli()
         val hours: MutableMap<Long, HourData> = mutableMapOf()
 
         for (k in 0..23) {

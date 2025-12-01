@@ -29,6 +29,7 @@ import com.leekleak.trafficlight.database.TrafficSnapshot
 import com.leekleak.trafficlight.model.PreferenceRepo
 import com.leekleak.trafficlight.util.SizeFormatter
 import com.leekleak.trafficlight.util.clipAndPad
+import com.leekleak.trafficlight.util.currentTimezone
 import com.leekleak.trafficlight.util.hasAllPermissions
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -43,6 +44,8 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import timber.log.Timber
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 
 class UsageService : Service(), KoinComponent {
     private val serviceScope = CoroutineScope(Dispatchers.IO)
@@ -209,12 +212,15 @@ class UsageService : Service(), KoinComponent {
         if (todayUsage.date != LocalDate.now()) {
             todayUsage = hourlyUsageRepo.calculateDayUsage(LocalDate.now())
         } else {
-            val stampLast = (System.currentTimeMillis() - DATA_UPDATE_FREQ * 1000) / 3_600_000 * 3_600_000
-            val stamp = System.currentTimeMillis() / 3_600_000 * 3_600_000
-            val stampNow = System.currentTimeMillis()
+            val time = LocalDateTime.now()
 
-            if (stampLast != stamp) updateTodayUsage(stampLast, stamp)
-            updateTodayUsage(stamp, stampNow)
+            val stampNow = time.toInstant(currentTimezone()).toEpochMilli()
+            val stampLast = (stampNow - DATA_UPDATE_FREQ * 1000) / 3_600_000 * 3_600_000
+
+            val stampHourStart = time.truncatedTo(ChronoUnit.HOURS).toInstant(currentTimezone()).toEpochMilli()
+
+            if (stampLast < stampHourStart) updateTodayUsage(stampLast, stampHourStart)
+            updateTodayUsage(stampHourStart, stampNow)
         }
     }
 
@@ -227,7 +233,7 @@ class UsageService : Service(), KoinComponent {
     }
 
     private fun interpolateDatabase(trafficSnapshot: TrafficSnapshot) {
-        val stamp = System.currentTimeMillis() / 3_600_000 * 3_600_000
+        val stamp = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS).toInstant(currentTimezone()).toEpochMilli()
         todayUsage.hours[stamp]?.add(trafficSnapshot.speedToHourData()) ?: run {
             todayUsage.hours[stamp] = trafficSnapshot.speedToHourData()
         }

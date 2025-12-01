@@ -32,9 +32,6 @@
     <string name="force_fallback_description">适用于有问题的系统或有线连接</string>
     <string name="fallback_unsupported">不支持</string>
     <string name="wi_fi">Wi-Fi: %1$s</string>
-    <plurals name="days">
-        <item quantity="other">%d 天</item>
-    </plurals>
     <string name="ui">用户界面</string>
     <string name="improve_contrast">高对比度</string>
     <string name="days">%1$d 天</string>
