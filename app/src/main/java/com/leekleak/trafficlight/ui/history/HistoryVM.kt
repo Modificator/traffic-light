@@ -1,6 +1,7 @@
 package com.leekleak.trafficlight.ui.history
 
 import androidx.lifecycle.ViewModel
+import com.leekleak.trafficlight.database.DayUsage
 import com.leekleak.trafficlight.database.HourlyUsageRepo
 import com.leekleak.trafficlight.database.HourUsage
 import kotlinx.coroutines.flow.Flow
@@ -12,9 +13,11 @@ import java.time.LocalDate
 class HistoryVM: ViewModel(), KoinComponent {
     private val hourlyUsageRepo: HourlyUsageRepo by inject()
 
-    val lastDayFlow: Flow<LocalDate> = hourlyUsageRepo.getLastDayWithData()
-    fun dayUsage(startStamp: Long, endStamp: Long): Flow<List<HourUsage>> =
-        hourlyUsageRepo.getUsage(startStamp, endStamp)
+    fun dayUsage(date: LocalDate): DayUsage =
+        hourlyUsageRepo.calculateDayUsage(date)
+
+    fun dayUsageBasic(date: LocalDate): DayUsage =
+        hourlyUsageRepo.calculateDayUsageBasic(date)
 
     val getMaxCombinedUsage: Flow<Long> = hourlyUsageRepo.getMaxCombinedUsage()
 }

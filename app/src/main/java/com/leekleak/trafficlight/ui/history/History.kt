@@ -23,11 +23,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateMap
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,33 +55,18 @@ import com.leekleak.trafficlight.ui.theme.card
 import com.leekleak.trafficlight.util.SizeFormatter
 import com.leekleak.trafficlight.util.categoryTitle
 import com.leekleak.trafficlight.util.categoryTitleSmall
-import com.leekleak.trafficlight.util.currentTimezone
 import com.leekleak.trafficlight.util.getName
 import com.leekleak.trafficlight.util.padHour
-import java.time.Duration
 import java.time.LocalDate
 import java.time.format.TextStyle
-import java.time.temporal.ChronoUnit
 
 @Composable
-fun History(
-    paddingValues: PaddingValues
-) {
+fun History(paddingValues: PaddingValues) {
     val viewModel: HistoryVM = viewModel()
-    Dashboard(viewModel, paddingValues)
-}
-
-@Composable
-fun Dashboard(viewModel: HistoryVM, paddingValues: PaddingValues) {
     val haptic = LocalHapticFeedback.current
-    val maxSize = viewModel.getMaxCombinedUsage.collectAsState(0L)
-    val lastDay by viewModel.lastDayFlow.collectAsState(LocalDate.now())
-    val duration = Duration.between(
-        lastDay.atStartOfDay(),
-        LocalDate.now().atStartOfDay(),
-    )
 
     var selected by remember { mutableIntStateOf(-1) }
+    val visibleSizes = remember { mutableStateMapOf<Int, Long>(-1 to 0) }
 
     LazyColumn(
         modifier = Modifier.background(MaterialTheme.colorScheme.surface).fillMaxSize(),
@@ -87,18 +76,16 @@ fun Dashboard(viewModel: HistoryVM, paddingValues: PaddingValues) {
         if (LocalDate.now().dayOfMonth != 1) {
             categoryTitleSmall(LocalDate.now().month.getName(TextStyle.FULL_STANDALONE))
         }
-        if (duration.toDays().toInt() > 0) {
-            for (index in 0..<duration.toDays().toInt()) {
-                val day = LocalDate.now().minusDays(index.toLong())
-                if (day.dayOfMonth == 1) {
-                    categoryTitleSmall(day.month.minus(1L).getName(TextStyle.FULL_STANDALONE))
-                }
-                item {
-                    Box (Modifier.padding(bottom = 6.dp)) {
-                        HistoryItem(viewModel, maxSize.value, index + 1, selected) { i: Int ->
-                            selected = i
-                            haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
-                        }
+        for (index in 0..90) {
+            val day = LocalDate.now().minusDays(index.toLong())
+            if (day.dayOfMonth == 1) {
+                categoryTitleSmall(day.month.minus(1L).getName(TextStyle.FULL_STANDALONE))
+            }
+            item {
+                Box(Modifier.padding(bottom = 6.dp)) {
+                    HistoryItem(viewModel, visibleSizes, index + 1, selected) { i: Int ->
+                        selected = i
+                        haptic.performHapticFeedback(HapticFeedbackType.ContextClick)
                     }
                 }
             }
@@ -109,16 +96,25 @@ fun Dashboard(viewModel: HistoryVM, paddingValues: PaddingValues) {
 @Composable
 fun HistoryItem(
     viewModel: HistoryVM,
-    maximum: Long,
+    visibleSizes: SnapshotStateMap<Int, Long>,
     i: Int,
     selected: Int,
     onClick: (i: Int) -> Unit
 ) {
     val date = LocalDate.now().minusDays(i.toLong())
-    val dayStamp = date.atStartOfDay().truncatedTo(ChronoUnit.DAYS).toInstant(currentTimezone()).toEpochMilli()
-    val usage by viewModel.dayUsage(dayStamp, dayStamp + 3_600_000L * 23).collectAsState(listOf())
-    val totalWifi = usage.sumOf { it.totalWifi }
-    val totalCellular = usage.sumOf { it.totalCellular }
+    val usageBasic = viewModel.dayUsageBasic(date)
+    val totalWifi = usageBasic.totalWifi
+    val totalCellular = usageBasic.totalCellular
+
+    DisposableEffect(Unit) {
+        visibleSizes[i] = totalWifi + totalCellular
+        onDispose { visibleSizes.remove(i) }
+    }
+
+    val maximum by remember(visibleSizes) {
+        derivedStateOf { visibleSizes.maxOf { it.value } }
+    }
+
     Column (Modifier.card()) {
         Box (
             modifier = Modifier
@@ -190,8 +186,9 @@ fun HistoryItem(
             enter = expandVertically(spring(0.7f, Spring.StiffnessMedium)),
             exit = shrinkVertically(spring(0.7f, Spring.StiffnessMedium))
         ) {
+            val usage = viewModel.dayUsage(date).hours.map { it.value }
             Box(modifier = Modifier.padding(4.dp)) {
-                BarGraph(dayUsageToBarData(usage))
+                BarGraph(dayUsageToBarData(usage.map { it.toHourUsage() }))
             }
         }
     }

@@ -215,21 +215,25 @@ class UsageService : Service(), KoinComponent {
             val time = LocalDateTime.now()
 
             val stampNow = time.toInstant(currentTimezone()).toEpochMilli()
-            val stampLast = (stampNow - DATA_UPDATE_FREQ * 1000) / 3_600_000 * 3_600_000
-
             val stampHourStart = time.truncatedTo(ChronoUnit.HOURS).toInstant(currentTimezone()).toEpochMilli()
 
-            if (stampLast < stampHourStart) updateTodayUsage(stampLast, stampHourStart)
+            val newHour = (stampNow - stampHourStart) < (DATA_UPDATE_FREQ * 1000)
+
+            if (newHour) updateTodayUsage(stampHourStart - 3_600_000, stampHourStart)
             updateTodayUsage(stampHourStart, stampNow)
         }
     }
 
     private fun updateTodayUsage(stamp: Long, stampNow: Long) {
-        todayUsage = todayUsage.copy(
-            hours = todayUsage.hours.apply {
-                this[stamp] = hourlyUsageRepo.calculateHourData(stamp, stampNow)
-            }
-        ).also { it.categorizeUsage() }
+        if (todayUsage.hours.containsKey(stamp)) {
+            todayUsage = todayUsage.copy(
+                hours = todayUsage.hours.apply {
+                    this[stamp] = hourlyUsageRepo.calculateHourData(stamp, stampNow)
+                }
+            ).also { it.categorizeUsage() }
+        } else {
+            todayUsage = hourlyUsageRepo.calculateDayUsage(LocalDate.now())
+        }
     }
 
     private fun interpolateDatabase(trafficSnapshot: TrafficSnapshot) {

@@ -1,9 +1,14 @@
 package com.leekleak.trafficlight.charts
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableLongState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -16,6 +21,15 @@ import androidx.compose.ui.unit.dp
 import com.leekleak.trafficlight.util.px
 import java.lang.Float.max
 import kotlin.math.min
+import kotlin.math.pow
+
+
+data class RectDrawData (
+    val rect: Rect,
+    val color: Color,
+    val leftRadius: CornerRadius,
+    val rightRadius: CornerRadius,
+)
 
 @Composable
 fun LineGraph(
@@ -28,12 +42,11 @@ fun LineGraph(
     val cornerBig = CornerRadius(32.dp.px)
     val cornerSmall = CornerRadius(16.dp.px)
 
-    data class RectDrawData (
-        val rect: Rect,
-        val color: Color,
-        val leftRadius: CornerRadius,
-        val rightRadius: CornerRadius,
-    )
+    val max = remember { Animatable(10f.pow(15)) }
+
+    LaunchedEffect(maximum) {
+        max.animateTo(maximum.toFloat())
+    }
 
     Canvas(
         modifier = Modifier
@@ -44,12 +57,12 @@ fun LineGraph(
         val cellularMaxWidth = size.width - if (data.first != 0L) 24.dp.toPx() else 0f
         val wifiSizeX =
             min(
-                max((data.first.toDouble() / maximum.toDouble() * size.width).toFloat(), cornerBig.x),
+                max((data.first.toDouble() / max.value * size.width).toFloat(), cornerBig.x),
                 wifiMaxWidth
             )
         val cellularSizeX =
             min(
-            max((data.second.toDouble() / maximum.toDouble() * size.width).toFloat(), cornerBig.x),
+            max((data.second.toDouble() / max.value * size.width).toFloat(), cornerBig.x),
             cellularMaxWidth
             )
 

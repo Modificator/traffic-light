@@ -99,6 +99,20 @@ class HourlyUsageRepo(context: Context) : KoinComponent {
         return DayUsage(date, hours).also { it.categorizeUsage() }
     }
 
+    fun calculateDayUsageBasic(date: LocalDate): DayUsage {
+        val dayStamp = date.atStartOfDay().truncatedTo(ChronoUnit.DAYS).toInstant(currentTimezone()).toEpochMilli()
+        val hours: MutableMap<Long, HourData> = mutableMapOf()
+
+        val stats = calculateHourData(dayStamp, dayStamp + 3_600_000L * 24)
+
+/*        for (k in 0..23) {
+            val globalHour = dayStamp + k * 3_600_000L
+            hours[globalHour] = calculateHourData(globalHour, globalHour + 3_600_000L)
+        }*/
+
+        return DayUsage(date, mutableMapOf(), stats.wifi, stats.cellular)
+    }
+
     fun calculateHourData(startTime: Long, endTime: Long): HourData {
         val statsWifi = networkStatsManager.querySummaryForDevice(NetworkType.Wifi.ordinal, null, startTime, endTime)
         val statsMobile = networkStatsManager.querySummaryForDevice(NetworkType.Cellular.ordinal, null, startTime, endTime)
