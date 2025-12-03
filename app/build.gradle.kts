@@ -16,8 +16,8 @@ android {
         applicationId = "com.leekleak.trafficlight"
         minSdk = 26
         targetSdk = 36
-        versionCode = 7
-        versionName = "2.4"
+        versionCode = 8
+        versionName = "2.5"
         base.archivesName = "$namespace-$versionName"
     }
     buildTypes {
@@ -71,10 +71,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.material3)
 
-    //implementation(libs.androidx.room.runtime)
-    //implementation(libs.androidx.room.ktx)
-    //ksp(libs.androidx.room.compiler)
-
     implementation(libs.kotlinx.serialization.json)
 
     implementation(project.dependencies.platform(libs.koin.bom))
@@ -89,7 +85,6 @@ dependencies {
     implementation(libs.androidx.datastore)
     implementation(libs.androidx.datastore.preferences)
 
-    // ViewModel
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
 
