@@ -29,6 +29,7 @@ import com.leekleak.trafficlight.database.TrafficSnapshot
 import com.leekleak.trafficlight.model.PreferenceRepo
 import com.leekleak.trafficlight.util.SizeFormatter
 import com.leekleak.trafficlight.util.clipAndPad
+import com.leekleak.trafficlight.util.currentTimezone
 import com.leekleak.trafficlight.util.hasAllPermissions
 import com.leekleak.trafficlight.util.toTimestamp
 import kotlinx.coroutines.CoroutineScope
@@ -240,7 +241,10 @@ class UsageService : Service(), KoinComponent {
     }
 
     private fun interpolateDatabase(trafficSnapshot: TrafficSnapshot) {
-        val stamp = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS).toTimestamp()
+        var hour = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS).atOffset(currentTimezone())
+        if (hour.hour % 2 == 1) hour = hour.minusHours(1L)
+        val stamp = hour.nano / 1_000_000L
+
         todayUsage.hours[stamp]?.add(trafficSnapshot.speedToHourData()) ?: run {
             todayUsage.hours[stamp] = trafficSnapshot.speedToHourData()
         }
