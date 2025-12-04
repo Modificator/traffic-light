@@ -22,7 +22,8 @@ Traffic Light is an open-source tool to track your network speed and data usage 
 |-------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------|
 
 ## Feedback
-Please use Github issues for both feature requests and bug reports. Check both open and closed issues for duplicates as your question may already have been answered.
+
+Make sure to follow the __issue template__ when reporting bugs or suggesting features! Reports not following the general outline will be closed without further consideration.
 
 ## Contributions
 
@@ -30,7 +31,7 @@ Please use Github issues for both feature requests and bug reports. Check both o
 Contributors are welcome, however as I'm quite jaded, please create an issue first. Unless I deem it incredibly useful, I doubt I'll accept any major new features, so please tell me first so as to not be disappointed.
 
 ### Translations
-All translations are welcome.
+All translations are welcome. A Weblate portal is also in the works.
 
 ## Blog post
 I wrote a little blog post about this project, why I made it and how it turned out the way it did. You can read it [here](https://tintotint.eu/programming/traffic-light/)
