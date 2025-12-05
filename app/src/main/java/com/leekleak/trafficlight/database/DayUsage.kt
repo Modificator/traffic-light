@@ -32,13 +32,6 @@ data class HourData(
     val total: Long
         get() = upload + download
 
-    fun toHourUsage(timestamp: Long = 0): HourUsage {
-        return HourUsage(timestamp,
-            wifi,
-            cellular
-        )
-    }
-
     fun add(other: HourData) {
         upload += other.upload
         download += other.download
