@@ -2,8 +2,10 @@ package com.leekleak.trafficlight.ui.app
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -17,18 +19,18 @@ import com.leekleak.trafficlight.util.hasUsageStatsPermission
 
 @Composable
 fun App() {
-    val notificationPermission = remember { mutableStateOf(false) }
-    val backgroundPermission = remember { mutableStateOf(false) }
-    val usagePermission = remember { mutableStateOf(false) }
+    var notificationPermission by remember { mutableStateOf(false) }
+    var backgroundPermission by remember { mutableStateOf(false) }
+    var usagePermission by remember { mutableStateOf(false) }
 
     val context = LocalContext.current
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                notificationPermission.value = hasNotificationPermission(context)
-                backgroundPermission.value = hasBackgroundPermission(context)
-                usagePermission.value = hasUsageStatsPermission(context)
+                notificationPermission = hasNotificationPermission(context)
+                backgroundPermission = hasBackgroundPermission(context)
+                usagePermission = hasUsageStatsPermission(context)
 
                 UsageService.startService(context)
             }
@@ -37,9 +39,9 @@ fun App() {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    if (notificationPermission.value && backgroundPermission.value && usagePermission.value) {
+    if (notificationPermission && backgroundPermission && usagePermission) {
         NavigationManager()
     } else {
-        Permissions(notificationPermission.value, backgroundPermission.value, usagePermission.value)
+        Permissions(notificationPermission, backgroundPermission, usagePermission)
     }
 }
