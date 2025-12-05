@@ -238,9 +238,18 @@ fun dayUsageToBarData(hours: List<HourUsage>): List<BarData> {
     return data
 }
 
-fun classyFont(): FontFamily =
-    FontFamily(
-        Font(
-            R.font.momo_trust_display
-        ),
-    )
+@Composable
+fun classyFont(): FontFamily? {
+    val viewModel: HistoryVM = viewModel()
+    val expressiveFonts by viewModel.preferenceRepo.expressiveFonts.collectAsState(true)
+
+    return if (expressiveFonts) {
+        FontFamily(
+            Font(
+                R.font.momo_trust_display
+            ),
+        )
+    } else {
+        null
+    }
+}

@@ -211,7 +211,7 @@ fun ThemePreference(theme: Theme, enabled: Boolean, onClick: () -> Unit) {
     }
     Column (
         Modifier
-            .clip(MaterialTheme.shapes.large)
+            .card()
             .clickable(onClick = {
                 scope.launch { haptic.performHapticFeedback(HapticFeedbackType.ToggleOn) }
                 onClick()

@@ -130,6 +130,16 @@ fun Settings(
                 ThemePreferenceContainer(theme, false) { viewModel.preferenceRepo.setTheme(it) }
             }
         }
+        item {
+            val expressiveFonts by viewModel.preferenceRepo.expressiveFonts.collectAsState(true)
+            SwitchPreference(
+                title = "Expressive Fonts",
+                icon = painterResource(R.drawable.expressive),
+                value = expressiveFonts,
+                onValueChanged = { viewModel.preferenceRepo.setExpressiveFonts(it) }
+            )
+        }
+
         categoryTitleSmall(R.string.about)
         item {
             Preference(

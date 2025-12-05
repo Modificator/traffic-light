@@ -38,11 +38,15 @@ class PreferenceRepo (
     val theme: Flow<Theme> = context.dataStore.data.map { Theme.valueOf(it[THEME] ?: Theme.AutoMaterial.name ) }
     fun setTheme(value: Theme) = scope.launch { context.dataStore.edit { it[THEME] = value.name } }
 
+    val expressiveFonts: Flow<Boolean> = context.dataStore.data.map { it[EXPRESSIVE_FONTS] ?: true }
+    fun setExpressiveFonts(value: Boolean) = scope.launch { context.dataStore.edit { it[EXPRESSIVE_FONTS] = value} }
+
     private companion object {
         val MODE_AOD = booleanPreferencesKey("mode_aod")
         val BIG_ICON = booleanPreferencesKey("big_icon")
         val SPEED_BITS = booleanPreferencesKey("speed_bits")
         val FORCE_FALLBACK = booleanPreferencesKey("force_fallback")
         val THEME = stringPreferencesKey("theme")
+        val EXPRESSIVE_FONTS = booleanPreferencesKey("expressive_fonts")
     }
 }

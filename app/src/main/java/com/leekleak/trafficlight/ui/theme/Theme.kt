@@ -12,16 +12,20 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.leekleak.trafficlight.R
+
 
 @Composable
 fun Theme(
@@ -29,6 +33,15 @@ fun Theme(
 ) {
     val viewModel: ThemeVM = viewModel()
     val theme by viewModel.preferenceRepo.theme.collectAsState(Theme.AutoMaterial)
+    val isDark = theme.isDark()
+
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as android.app.Activity).window
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !isDark
+        }
+    }
 
     MaterialTheme (theme.getColors()) { content() }
 }
@@ -74,12 +87,24 @@ enum class Theme {
             DarkMaterial, Dark -> stringResource(R.string.dark)
         }
     }
+
+    @Composable
+    fun isDark(): Boolean {
+        val darkTheme = isSystemInDarkTheme()
+        return (
+            darkTheme && this == AutoMaterial ||
+            darkTheme && this == Auto ||
+            this == DarkMaterial ||
+            this == Dark
+        )
+    }
 }
 
 
 @Composable
 fun Modifier.card(): Modifier {
-    return this.shadow(1.dp, MaterialTheme.shapes.large)
+    return this
+        .shadow(1.dp, MaterialTheme.shapes.large)
         .clip(MaterialTheme.shapes.large)
         .background(colorScheme.surfaceContainer)
 }

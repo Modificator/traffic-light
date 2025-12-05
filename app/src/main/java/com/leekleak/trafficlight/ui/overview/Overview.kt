@@ -129,14 +129,14 @@ fun RowScope.SummaryItem(
     val haptic = LocalHapticFeedback.current
     Row (
         modifier = Modifier
-            .weight(1f + animation.value / 256f)
+            .weight(1f + animation.value / 5f)
             .card()
             .pointerInput(Unit) {
                 detectTapGestures(
                     onPress = {
                         haptic.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
                         animation.animateTo(
-                            64f,
+                            1f,
                             spring(Spring.DampingRatioMediumBouncy, Spring.StiffnessMedium)
                         )
                         tryAwaitRelease()
@@ -188,12 +188,21 @@ fun RowScope.SummaryItem(
 }
 
 @OptIn(ExperimentalTextApi::class)
-fun chonkyFont(opticalSize: Float = 0f): FontFamily =
-    FontFamily(
-        Font(
-            R.font.jaro,
-            variationSettings = FontVariation.Settings(
-                FontVariation.Setting("opsz", 80f - opticalSize)
-            )
-        ),
-    )
+@Composable
+fun chonkyFont(animation: Float): FontFamily? {
+    val viewModel: OverviewVM = viewModel()
+    val expressiveFonts by viewModel.preferenceRepo.expressiveFonts.collectAsState(true)
+
+    return if (expressiveFonts) {
+        FontFamily(
+            Font(
+                R.font.jaro,
+                variationSettings = FontVariation.Settings(
+                    FontVariation.Setting("opsz", 72f - animation * 60f)
+                )
+            ),
+        )
+    } else {
+        null
+    }
+}

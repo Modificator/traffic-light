@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import com.leekleak.trafficlight.charts.model.BarData
 import com.leekleak.trafficlight.database.DayUsage
 import com.leekleak.trafficlight.database.HourlyUsageRepo
+import com.leekleak.trafficlight.model.PreferenceRepo
 import com.leekleak.trafficlight.services.UsageService
 import com.leekleak.trafficlight.util.getName
 import kotlinx.coroutines.Dispatchers
@@ -17,7 +18,9 @@ import java.time.LocalDate
 import java.time.format.TextStyle
 
 class OverviewVM : ViewModel(), KoinComponent {
+    val preferenceRepo: PreferenceRepo by inject()
     private val hourlyUsageRepo: HourlyUsageRepo by inject()
+
     val todayUsage: Flow<DayUsage> = UsageService.todayUsageFlow
 
     fun weekUsage(): Flow<List<BarData>> = flow {
