@@ -274,7 +274,7 @@ fun ThemeAutoPreference(theme: Theme, enabled: Boolean, onClick: () -> Unit) {
     val radiusSmall = 12.dp.px
     val radiusBig = 38.dp.px
     val cornerRadius = remember { Animatable(radiusSmall) }
-    val rotation = remember { Animatable(0f) }
+    val rotation = remember { Animatable(-15f) }
 
     val shape1 = GraphTheme.wifiShape().toPath()
     val shape2 = GraphTheme.cellularShape().toPath()

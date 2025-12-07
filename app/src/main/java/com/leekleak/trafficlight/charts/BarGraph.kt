@@ -188,17 +188,6 @@ private fun BarGraphImpl(
         barGraphHelper.drawGrid(gridColor)
 
         barGraphHelper.drawLegend(
-            barGraphHelper.metrics.wifiIconOffset.copy(
-                y = barGraphHelper.metrics.wifiIconOffset.y + wifiLegendOffset.value
-            ),
-            primaryColor,
-            shapeWifi,
-            iconWifi,
-            onPrimaryColor,
-            wifiAnimation.value,
-        )
-
-        barGraphHelper.drawLegend(
             barGraphHelper.metrics.cellularIconOffset.copy(
                 y = barGraphHelper.metrics.cellularIconOffset.y + cellularLegendOffset.value
             ),
@@ -207,6 +196,17 @@ private fun BarGraphImpl(
             iconCellular,
             onSecondaryColor,
             cellularAnimation.value,
+        )
+
+        barGraphHelper.drawLegend(
+            barGraphHelper.metrics.wifiIconOffset.copy(
+                y = barGraphHelper.metrics.wifiIconOffset.y + wifiLegendOffset.value
+            ),
+            primaryColor,
+            shapeWifi,
+            iconWifi,
+            onPrimaryColor,
+            wifiAnimation.value,
         )
 
         barGraphHelper.drawTextLabelsOverXAndYAxis(gridColor, centerLabels)
