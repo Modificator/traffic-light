@@ -35,6 +35,9 @@ Contributors are welcome, however as I'm quite jaded, please create an issue fir
 
 Translation can be done on [Weblate](https://hosted.weblate.org/engage/traffic-light/)
 
+## Troubleshooting
+Check out the troubleshooting wiki [page](https://github.com/leekleak/traffic-light/wiki/Troubleshooting).
+
 ## Blog post
 I wrote a little blog post about this project, why I made it and how it turned out the way it did. You can read it [here](https://tintotint.eu/programming/traffic-light/)
 
