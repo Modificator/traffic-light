@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.leekleak.trafficlight.R
 import com.leekleak.trafficlight.charts.GraphTheme
@@ -154,7 +155,7 @@ fun ThemePreferenceContainer(currentTheme: Theme, material: Boolean, onThemeChan
     val themeDark = if (material) Theme.DarkMaterial else Theme.Dark
     val themeAuto = if (material) Theme.AutoMaterial else Theme.Auto
     Column {
-        CategoryTitleSmallText(if (material) "Material" else "Default")
+        CategoryTitleSmallText(if (material) stringResource(R.string.material_theme) else stringResource(R.string.default_theme))
         Column(
             modifier = Modifier
                 .clip(MaterialTheme.shapes.large)
@@ -211,7 +212,7 @@ fun ThemePreference(theme: Theme, enabled: Boolean, onClick: () -> Unit) {
                 scope.launch { haptic.performHapticFeedback(HapticFeedbackType.ToggleOn) }
                 onClick()
             })
-            .background (if (enabled) colorScheme.surfaceVariant else colorScheme.surfaceContainer)
+            .background(if (enabled) colorScheme.surfaceVariant else colorScheme.surfaceContainer)
             .padding(4.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -228,18 +229,18 @@ fun ThemePreference(theme: Theme, enabled: Boolean, onClick: () -> Unit) {
                     }
                     val x = size.width / 7f
                     val y = size.height / 2f
-                    translate (x*2, y) {
-                        rotate (rotation.value * 2f) {
-                            translate (-rotation.value, rotation.value) {
+                    translate(x * 2, y) {
+                        rotate(rotation.value * 2f) {
+                            translate(-rotation.value, rotation.value) {
                                 scale(iconScale.value, Offset(0.5f, 0.5f)) {
                                     drawPath(shape1, scheme.primary)
                                 }
                             }
                         }
                     }
-                    translate (x*5, y) {
-                        rotate (-rotation.value * 2f) {
-                            translate (rotation.value, -rotation.value) {
+                    translate(x * 5, y) {
+                        rotate(-rotation.value * 2f) {
+                            translate(rotation.value, -rotation.value) {
                                 scale(iconScale.value, Offset(0.5f, 0.5f)) {
                                     drawPath(shape2, scheme.tertiary)
                                 }
@@ -303,20 +304,20 @@ fun ThemeAutoPreference(theme: Theme, enabled: Boolean, onClick: () -> Unit) {
                 scope.launch { haptic.performHapticFeedback(HapticFeedbackType.ToggleOn) }
                 onClick()
             })
-            .background (if (enabled) colorScheme.surfaceVariant else colorScheme.surfaceContainer)
+            .background(if (enabled) colorScheme.surfaceVariant else colorScheme.surfaceContainer)
             .padding(4.dp)
             .drawBehind {
                 val x = size.width / 7f
                 val y = size.height / 2f
-                translate (x*1, y) {
-                    rotate (rotation.value * 2f) {
+                translate(x * 1, y) {
+                    rotate(rotation.value * 2f) {
                         scale(iconScale.value, Offset(0.5f, 0.5f)) {
                             drawPath(shape1, scheme.primary)
                         }
                     }
                 }
-                translate (x*6, y) {
-                    rotate (-rotation.value * 2f) {
+                translate(x * 6, y) {
+                    rotate(-rotation.value * 2f) {
                         scale(iconScale.value, Offset(0.5f, 0.5f)) {
                             drawPath(shape2, scheme.tertiary)
                         }

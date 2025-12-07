@@ -37,4 +37,7 @@
     <string name="auto">Auto</string>
     <string name="light">Light</string>
     <string name="dark">Dark</string>
+    <string name="expressive_fonts">Expressive Fonts</string>
+    <string name="material_theme" translatable="false">Material You</string>
+    <string name="default_theme">Default</string>
 </resources>
