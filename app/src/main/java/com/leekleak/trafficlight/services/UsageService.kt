@@ -26,11 +26,11 @@ import com.leekleak.trafficlight.R
 import com.leekleak.trafficlight.database.DayUsage
 import com.leekleak.trafficlight.database.HourlyUsageRepo
 import com.leekleak.trafficlight.database.TrafficSnapshot
+import com.leekleak.trafficlight.database.UsageMode
 import com.leekleak.trafficlight.model.PreferenceRepo
 import com.leekleak.trafficlight.util.SizeFormatter
 import com.leekleak.trafficlight.util.clipAndPad
 import com.leekleak.trafficlight.util.currentTimezone
-import com.leekleak.trafficlight.util.hasAllPermissions
 import com.leekleak.trafficlight.util.toTimestamp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -39,6 +39,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.koin.core.component.KoinComponent
@@ -111,13 +112,14 @@ class UsageService : Service(), KoinComponent {
             preferenceRepo.speedBits.collect { formatter.asBits = it }
         }
         serviceScope.launch {
-            hourlyUsageRepo.limitedMode().collect { limitedMode = it }
+            hourlyUsageRepo.usageModeFlow().collect { limitedMode = it != UsageMode.Unlimited }
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         unregisterReceiver(screenStateReceiver)
+        notificationManager.cancel(NOTIFICATION_ID)
         job?.cancel()
         serviceScope.cancel()
     }
@@ -140,7 +142,9 @@ class UsageService : Service(), KoinComponent {
         if (job == null) {
             startJob()
 
-            todayUsage = hourlyUsageRepo.calculateDayUsage(LocalDate.now())
+            if (!limitedMode) {
+                todayUsage = hourlyUsageRepo.calculateDayUsage(LocalDate.now())
+            }
             notificationBuilder
                 .setContentIntent(
                     PendingIntent.getActivity(
@@ -339,7 +343,7 @@ class UsageService : Service(), KoinComponent {
         }
     }
 
-    companion object {
+    companion object : KoinComponent {
         const val NOTIFICATION_ID = 228
         const val NOTIFICATION_CHANNEL_ID = "PersistentNotification"
         const val DATA_UPDATE_FREQ = 5
@@ -359,10 +363,14 @@ class UsageService : Service(), KoinComponent {
         }
 
         fun startService(context: Context) {
-            if (!isInstanceCreated() && hasAllPermissions(context)) {
-                val intent = Intent(context, UsageService::class.java)
-                context.startService(intent)
-                Timber.i("Started service")
+            val preferenceRepo: PreferenceRepo by inject()
+            CoroutineScope(Dispatchers.Default).launch {
+                val enabled = preferenceRepo.notification.first()
+                if (!isInstanceCreated() && enabled) {
+                    val intent = Intent(context, UsageService::class.java)
+                    context.startService(intent)
+                    Timber.i("Started service")
+                }
             }
         }
 
