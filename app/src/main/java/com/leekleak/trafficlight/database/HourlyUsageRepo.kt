@@ -19,7 +19,6 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import timber.log.Timber
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
@@ -33,6 +32,19 @@ class HourlyUsageRepo(context: Context) : KoinComponent {
     private var networkStatsManager: NetworkStatsManager = context.getSystemService(NETWORK_STATS_SERVICE) as NetworkStatsManager
     private var packageManager: PackageManager = context.packageManager
     private val permissionManager: PermissionManager by inject()
+
+    val suspiciousApps by lazy {
+        val list = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            packageManager.getInstalledApplications(PackageManager.ApplicationInfoFlags.of(0L))
+        } else {
+            packageManager.getInstalledApplications(0)
+        }.toMutableList()
+        list.removeAll { app ->
+            val pi = packageManager.getPackageInfo(app.packageName, PackageManager.GET_PERMISSIONS)
+            !(pi.requestedPermissions?.contains("android.permission.INTERNET") ?: true)
+        }
+        list.toList()
+    }
 
     fun usageModeFlow(): Flow<UsageMode> = permissionManager.usagePermissionFlow.map {
         val millis = System.currentTimeMillis()
@@ -91,14 +103,7 @@ class HourlyUsageRepo(context: Context) : KoinComponent {
     }
 
     suspend fun getAllAppUsage(date: LocalDate): List<AppUsage> = coroutineScope {
-        var time = System.currentTimeMillis()
-        val apps = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            packageManager.getInstalledApplications(PackageManager.ApplicationInfoFlags.of(0L))
-        } else {
-            packageManager.getInstalledApplications(0)
-        }
-        Timber.e("Took ${System.currentTimeMillis() - time}ms to get apps")
-        val jobs = apps.map { app ->
+        val jobs = suspiciousApps.map { app ->
             async(Dispatchers.IO) {
                 val dayUsage = calculateAppDayUsage(date, app.uid)
                 return@async AppUsage(
@@ -106,7 +111,8 @@ class HourlyUsageRepo(context: Context) : KoinComponent {
                     uid = app.uid,
                     name = app.loadLabel(packageManager).toString(),
                     icon = app.icon,
-                    drawable = app.loadIcon(packageManager)
+                    drawable = app.loadIcon(packageManager),
+                    appInfo = app
                 )
             }
         }
@@ -114,8 +120,7 @@ class HourlyUsageRepo(context: Context) : KoinComponent {
         val list = jobs.awaitAll().toMutableList()
         list.removeAll { it.usage.totalCellular + it.usage.totalWifi == 0L }
         list.sortByDescending { it.usage.totalCellular + it.usage.totalWifi }
-        Timber.e("Took ${System.currentTimeMillis() - time}ms to do everything")
-        return@coroutineScope list.toList()
+        return@coroutineScope list.map { it }
     }
 
     fun calculateAppDayUsage(date: LocalDate, uid: Int): DayUsage {

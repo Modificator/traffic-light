@@ -1,11 +1,6 @@
 package com.leekleak.trafficlight.ui.history
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Spring
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -18,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -42,9 +37,7 @@ import com.leekleak.trafficlight.database.AppUsage
 import com.leekleak.trafficlight.ui.theme.card
 import com.leekleak.trafficlight.util.categoryTitle
 import com.leekleak.trafficlight.util.px
-import timber.log.Timber
 import java.time.LocalDate
-import kotlin.math.max
 import kotlin.math.roundToInt
 
 @Composable
@@ -80,17 +73,15 @@ fun AppItem(
     val totalCellular = appUsage.usage.totalCellular
 
     Column (Modifier.card()) {
-        Box (Modifier.clickable { onClick(if (selected != i) i else -1) }) {
+        Column (Modifier.clickable { onClick(if (selected != i) i else -1) }) {
             Row(
                 modifier = Modifier.padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                Column {
-                    val width = 32.dp.px.roundToInt()
-                    val bitmap = appUsage.drawable?.toBitmap(width, width)
-                    bitmap?.let { Image(bitmap = it.asImageBitmap(), contentDescription = null) }
-                }
+                val width = 32.dp.px.roundToInt()
+                val bitmap = appUsage.drawable?.toBitmap(width, width)
+                bitmap?.let { Image(bitmap = it.asImageBitmap(), contentDescription = null) }
 
                 AnimatedContent(selected == i) { selected ->
                     if (!selected) {
@@ -122,6 +113,20 @@ fun AppItem(
                                 value = totalCellular
                             )
                         }
+                    }
+                }
+
+            }
+            AnimatedContent(selected == i) { selected ->
+                if (selected) {
+                    Box(
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            textAlign = TextAlign.Center,
+                            text = appUsage.name + "\n" + appUsage.appInfo.packageName
+                        )
                     }
                 }
             }

@@ -56,7 +56,6 @@ import com.leekleak.trafficlight.charts.model.BarData
 import com.leekleak.trafficlight.database.DayUsage
 import com.leekleak.trafficlight.model.PreferenceRepo
 import com.leekleak.trafficlight.ui.navigation.AppDataUsage
-import com.leekleak.trafficlight.ui.navigation.NavigationManager
 import com.leekleak.trafficlight.ui.theme.card
 import com.leekleak.trafficlight.util.SizeFormatter
 import com.leekleak.trafficlight.util.categoryTitle
@@ -203,9 +202,20 @@ fun HistoryItem(
             exit = shrinkVertically(spring(0.7f, Spring.StiffnessMedium))
         ) {
             val usage by viewModel.dayUsage(date).collectAsState(DayUsage())
-            Column (modifier = Modifier.padding(4.dp)) {
-                BarGraph(dayUsageToBarData(usage))
-                Button(onClick = { onAppUsageOpen(date) }) {
+            Column {
+                Box (modifier = Modifier.padding(4.dp)){
+                    BarGraph(dayUsageToBarData(usage))
+                }
+                Button(
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.fillMaxWidth().padding(start = 4.dp, end = 4.dp),
+                    onClick = { onAppUsageOpen(date) },
+                ) {
+                    Icon(
+                        modifier = Modifier.padding(end = 4.dp),
+                        painter = painterResource(R.drawable.app),
+                        contentDescription = null
+                    )
                     Text(text = stringResource(R.string.app_usage))
                 }
             }

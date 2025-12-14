@@ -1,5 +1,6 @@
 package com.leekleak.trafficlight.database
 
+import android.content.pm.ApplicationInfo
 import android.graphics.drawable.Drawable
 import android.graphics.drawable.Icon
 import android.net.TrafficStats
@@ -30,7 +31,8 @@ data class AppUsage(
     val uid: Int,
     val name: String,
     val icon: Int,
-    val drawable: Drawable?
+    val drawable: Drawable?,
+    val appInfo: ApplicationInfo
 )
 
 data class HourData(
