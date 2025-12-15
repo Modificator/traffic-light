@@ -30,7 +30,6 @@ import com.leekleak.trafficlight.database.UsageMode
 import com.leekleak.trafficlight.model.PreferenceRepo
 import com.leekleak.trafficlight.util.SizeFormatter
 import com.leekleak.trafficlight.util.clipAndPad
-import com.leekleak.trafficlight.util.currentTimezone
 import com.leekleak.trafficlight.util.toTimestamp
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -184,7 +183,6 @@ class UsageService : Service(), KoinComponent {
                         updateDatabase()
                         updateCounter = 0
                     } else {
-                        //interpolateDatabase(trafficSnapshot)
                         updateCounter++
                     }
                 }
@@ -225,17 +223,6 @@ class UsageService : Service(), KoinComponent {
         } else {
             todayUsage = hourlyUsageRepo.calculateDayUsage(LocalDate.now())
         }
-    }
-
-    private fun interpolateDatabase(trafficSnapshot: TrafficSnapshot) {
-        var hour = LocalDateTime.now().truncatedTo(ChronoUnit.HOURS).atOffset(currentTimezone())
-        if (hour.hour % 2 == 1) hour = hour.minusHours(1L)
-        val stamp = hour.nano / 1_000_000L
-
-        todayUsage.hours[stamp]?.add(trafficSnapshot.speedToHourData()) ?: run {
-            todayUsage.hours[stamp] = trafficSnapshot.speedToHourData()
-        }
-        todayUsage.categorizeUsage()
     }
 
     private var lastTitle: String = ""

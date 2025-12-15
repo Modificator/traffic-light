@@ -54,9 +54,7 @@ fun AppDataUsage(date: LocalDate, paddingValues: PaddingValues) {
     ) {
         categoryTitle(R.string.app_usage)
         itemsIndexed(list) { index, item ->
-            AppItem(item, index, selected, maximum) {
-                selected = if (selected != index) index else -1
-            }
+            AppItem(item, index, selected, maximum) { selected = it }
         }
     }
 }

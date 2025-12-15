@@ -4,10 +4,8 @@ import android.app.usage.NetworkStats
 import android.app.usage.NetworkStatsManager
 import android.content.Context
 import android.content.Context.NETWORK_STATS_SERVICE
-import android.content.pm.PackageManager
-import android.os.Build
+import com.leekleak.trafficlight.model.AppDatabase
 import com.leekleak.trafficlight.services.PermissionManager
-import com.leekleak.trafficlight.util.NetworkType
 import com.leekleak.trafficlight.util.toTimestamp
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -30,21 +28,8 @@ enum class UsageMode {
 
 class HourlyUsageRepo(context: Context) : KoinComponent {
     private var networkStatsManager: NetworkStatsManager = context.getSystemService(NETWORK_STATS_SERVICE) as NetworkStatsManager
-    private var packageManager: PackageManager = context.packageManager
     private val permissionManager: PermissionManager by inject()
-
-    val suspiciousApps by lazy {
-        val list = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            packageManager.getInstalledApplications(PackageManager.ApplicationInfoFlags.of(0L))
-        } else {
-            packageManager.getInstalledApplications(0)
-        }.toMutableList()
-        list.removeAll { app ->
-            val pi = packageManager.getPackageInfo(app.packageName, PackageManager.GET_PERMISSIONS)
-            !(pi.requestedPermissions?.contains("android.permission.INTERNET") ?: true)
-        }
-        list.toList()
-    }
+    private val appDatabase: AppDatabase by inject()
 
     fun usageModeFlow(): Flow<UsageMode> = permissionManager.usagePermissionFlow.map {
         val millis = System.currentTimeMillis()
@@ -67,51 +52,66 @@ class HourlyUsageRepo(context: Context) : KoinComponent {
     }
 
     fun calculateDayUsageFlow(date: LocalDate): Flow<DayUsage> = flow {
-        val dayStamp = date.atStartOfDay().truncatedTo(ChronoUnit.DAYS).toTimestamp()
-        val hours: MutableMap<Long, HourData> = mutableMapOf()
-
-        for (k in 0..11) {
-            val globalHour = dayStamp + k * 3_600_000L * 2
-            hours[k * 2L] = calculateHourData(globalHour, globalHour + 3_600_000L * 2)
-        }
-        emit(DayUsage(date, hours).also { it.categorizeUsage() })
+        emit(calculateDayUsage(date))
     }.flowOn(Dispatchers.Default)
 
-    fun calculateDayUsageBasic(date: LocalDate): DayUsage {
+    fun calculateDayUsageBasic(date: LocalDate, uid: Int? = null): DayUsage {
         val dayStamp = date.atStartOfDay().truncatedTo(ChronoUnit.DAYS).toTimestamp()
-        val stats = calculateHourData(dayStamp, dayStamp + 3_600_000L * 24)
+        val stats = calculateHourData(dayStamp, dayStamp + 3_600_000L * 24, uid)
         return DayUsage(date, mutableMapOf(), stats.wifi, stats.cellular)
     }
 
-    fun calculateHourData(startTime: Long, endTime: Long): HourData {
-        val statsWifi = networkStatsManager.querySummaryForDevice(NetworkType.Wifi.ordinal, null, startTime, endTime)
-        val statsMobile = networkStatsManager.querySummaryForDevice(NetworkType.Cellular.ordinal, null, startTime, endTime)
+    fun calculateHourData(startTime: Long, endTime: Long, uid: Int? = null): HourData {
+        val wifiBuckets = mutableListOf<NetworkStats.Bucket>()
+        val mobileBuckets = mutableListOf<NetworkStats.Bucket>()
 
-        val hourData = HourData()
-        statsMobile?.let {
-            hourData.cellular += it.txBytes + it.rxBytes
-            hourData.upload += it.txBytes
-            hourData.download += it.rxBytes
+        if (uid == null) {
+            wifiBuckets.add(
+                networkStatsManager.querySummaryForDevice(0, null, startTime, endTime)
+            )
+            mobileBuckets.add(
+                networkStatsManager.querySummaryForDevice(1,null, startTime, endTime)
+            )
+        } else {
+            val statsWifi = networkStatsManager.queryDetailsForUid(0, null, startTime, endTime, uid)
+            val statsMobile = networkStatsManager.queryDetailsForUid(1, null, startTime, endTime, uid)
+            while (statsWifi.hasNextBucket()) {
+                val bucket = NetworkStats.Bucket()
+                statsWifi.getNextBucket(bucket)
+                wifiBuckets.add(bucket)
+            }
+            while (statsMobile.hasNextBucket()) {
+                val bucket = NetworkStats.Bucket()
+                statsMobile.getNextBucket(bucket)
+                mobileBuckets.add(bucket)
+            }
         }
 
-        statsWifi?.let {
-            hourData.wifi += it.txBytes + it.rxBytes
-            hourData.upload += it.txBytes
-            hourData.download += it.rxBytes
+        val hourData = HourData()
+        for (bucket in wifiBuckets) {
+            hourData.cellular += bucket.txBytes + bucket.rxBytes
+            hourData.upload += bucket.txBytes
+            hourData.download += bucket.rxBytes
+        }
+
+        for (bucket in mobileBuckets) {
+            hourData.wifi += bucket.txBytes + bucket.rxBytes
+            hourData.upload += bucket.txBytes
+            hourData.download += bucket.rxBytes
         }
         return hourData
     }
 
     suspend fun getAllAppUsage(date: LocalDate): List<AppUsage> = coroutineScope {
-        val jobs = suspiciousApps.map { app ->
+        val jobs = appDatabase.suspiciousApps.map { app ->
             async(Dispatchers.IO) {
-                val dayUsage = calculateAppDayUsage(date, app.uid)
+                val dayUsage = calculateDayUsageBasic(date, app.uid)
                 return@async AppUsage(
                     usage = dayUsage,
                     uid = app.uid,
-                    name = app.loadLabel(packageManager).toString(),
+                    name = appDatabase.getLabel(app),
                     icon = app.icon,
-                    drawable = app.loadIcon(packageManager),
+                    drawable = appDatabase.getIcon(app),
                     appInfo = app
                 )
             }
@@ -121,37 +121,5 @@ class HourlyUsageRepo(context: Context) : KoinComponent {
         list.removeAll { it.usage.totalCellular + it.usage.totalWifi == 0L }
         list.sortByDescending { it.usage.totalCellular + it.usage.totalWifi }
         return@coroutineScope list.map { it }
-    }
-
-    fun calculateAppDayUsage(date: LocalDate, uid: Int): DayUsage {
-        val dayStamp = date.atStartOfDay().truncatedTo(ChronoUnit.DAYS).toTimestamp()
-        val stats = calculateAppHourData(dayStamp, dayStamp + 3_600_000L * 24, uid)
-        return DayUsage(date, mutableMapOf(), stats.wifi, stats.cellular)
-    }
-
-    fun calculateAppHourData(startTime: Long, endTime: Long, uid: Int): HourData {
-        val statsWifi = networkStatsManager.queryDetailsForUid(NetworkType.Wifi.ordinal, null, startTime, endTime, uid)
-        val statsMobile = networkStatsManager.queryDetailsForUid(NetworkType.Cellular.ordinal, null, startTime, endTime, uid)
-
-        val hourData = HourData()
-        val bucket = NetworkStats.Bucket()
-        while (statsMobile.hasNextBucket()) {
-            statsMobile.getNextBucket(bucket)
-            bucket.let {
-                hourData.cellular += it.txBytes + it.rxBytes
-                hourData.upload += it.txBytes
-                hourData.download += it.rxBytes
-            }
-        }
-
-        while (statsWifi.hasNextBucket()) {
-            statsWifi.getNextBucket(bucket)
-            bucket.let {
-                hourData.wifi += it.txBytes + it.rxBytes
-                hourData.upload += it.txBytes
-                hourData.download += it.rxBytes
-            }
-        }
-        return hourData
     }
 }

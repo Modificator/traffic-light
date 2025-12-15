@@ -2,7 +2,6 @@ package com.leekleak.trafficlight.database
 
 import android.content.pm.ApplicationInfo
 import android.graphics.drawable.Drawable
-import android.graphics.drawable.Icon
 import android.net.TrafficStats
 import com.leekleak.trafficlight.model.PreferenceRepo
 import kotlinx.coroutines.CoroutineScope
@@ -43,25 +42,13 @@ data class HourData(
 ) {
     val total: Long
         get() = upload + download
-
-    fun add(other: HourData) {
-        upload += other.upload
-        download += other.download
-        wifi += other.wifi
-        cellular += other.cellular
-    }
 }
 
 data class TrafficSnapshot (
     var lastDown: Long = 0,
     var lastUp: Long = 0,
-    var lastMobile: Long = 0,
-    var lastWifi: Long = 0,
-
     var currentDown: Long = 0,
     var currentUp: Long = 0,
-    var currentMobile: Long = 0,
-    var currentWifi: Long = 0,
 ) : KoinComponent {
     private val preferenceRepo: PreferenceRepo by inject()
     private var useFallback: Boolean = TrafficStats.getTotalTxBytes() == TrafficStats.UNSUPPORTED.toLong()
@@ -83,24 +70,9 @@ data class TrafficSnapshot (
     val downSpeed: Long
         get() = currentDown - lastDown
 
-    val mobileSpeed: Long
-        get() = currentMobile - lastMobile
-
-    val wifiSpeed: Long
-        get() = currentWifi - lastWifi
-
     fun setCurrentAsLast() {
         lastDown = currentDown
         lastUp = currentUp
-        lastMobile = currentMobile
-        lastWifi = currentWifi
-    }
-
-    fun isCurrentSameAsLast(): Boolean {
-        return lastDown == currentDown &&
-            lastUp == currentUp &&
-            lastMobile == currentMobile &&
-            lastWifi == currentWifi
     }
 
     fun updateSnapshot() {
@@ -122,8 +94,6 @@ data class TrafficSnapshot (
     private fun regularUpdateSnapshot() {
         currentDown = TrafficStats.getTotalRxBytes()
         currentUp = TrafficStats.getTotalTxBytes()
-        currentMobile = TrafficStats.getMobileRxBytes() + TrafficStats.getMobileTxBytes()
-        currentWifi = currentUp + currentDown - currentMobile
 
         /**
          * Fun fact: when switching networks the api sometimes fucks up the values as per
@@ -142,11 +112,9 @@ data class TrafficSnapshot (
                        if (ethRxFile.canRead()) ethRxFile.readText().trim().toLong() else 0
         currentUp = mobileUp + wifiUp
         currentDown = mobileDown + wifiDown
-        currentMobile = mobileUp + mobileDown
-        currentWifi = wifiUp + wifiDown
     }
 
-    fun speedToHourData(): HourData = HourData(upSpeed, downSpeed, wifiSpeed, mobileSpeed)
+    fun isCurrentSameAsLast(): Boolean = lastDown == currentDown && lastUp == currentUp
 
     companion object {
         private val mobileRxFile: File by lazy { File("/sys/class/net/rmnet0/statistics/rx_bytes") }
